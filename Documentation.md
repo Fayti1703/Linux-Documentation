@@ -19,7 +19,7 @@ cat file.txt
 printf prints out a formatted string in which you can put variables and escape sequences.
 
 ~~~bash
-printf "Hi, I'm %s.\n" $NAME
+printf "Hi, I'm %s.\n" "$NAME"
 ~~~
 
 ## List Files
@@ -40,12 +40,12 @@ mv file1 file2
 # Delete
 rm file
 rm -r directory # recursively remove
-rmdir # removes a directory
+rmdir # removes a directory (it must be empty)
 ~~~
 
 ## fsck
 
-This verifies a file system (like checkdisk). 
+This verifies a file system (like chkdsk). 
 
 ## pwd
 
@@ -56,6 +56,7 @@ Print Working Directory prints the current directory path.
 ~~~bash
 / # root directory
 ~ # current users home directory
+~root # home directory of the root user
 ./ # current directory
 ~~~
 
@@ -75,11 +76,11 @@ chroot /home/user/directory command
 
 ## Fakeroot
 
-Fakeroot creates a environment that simulates root privileges on a command. It fooles the command process that it runs as root.
+Fakeroot creates an environment that "simulates" root privileges on a command. It fools the process to think it is being run as root.
 
 ## File Extensions
 
-Linux does not know any file extensions. It determines the type of a file by the file header. Use whatever you want.
+Linux does not know any file extensions. It determines the type of a file by the first few bytes of the contents (called the "magic bytes"). Use whatever you want.
 
 ## Special Chaining Operators
 
@@ -167,27 +168,27 @@ When writing a script you want to execute with the console (./script), you need 
 ## mkpasswd
 
 ~~~bash
-mkpasswd -l 16 # generates a passwort of length 16
+mkpasswd -l 16 # generates a password of length 16
 ~~~
 
 ## Checking Disk Usage
 
 ~~~bash
-df # Disk Free: shows free disk space
-du # Disk Usage: shows the used disk space
+df # Disk Free: report disk space usage
+du # Disk Usage: estimate file space usage
 ~~~
 
 ## iptables
 
-iptables is a low-Level IP-Filtering Firewall.
+`iptables` is a low-level IP-Filtering Firewall.
 
 ## arptables
 
-arptables is a low-Level ARP-Filtering Firewall.
+`arptables` is a low-level ARP-Filtering Firewall.
 
 ## dd
 
-The disk dump command allowes you to create images from block devices or write images to block devices.
+The disk dump command allows you to create images from block devices or write images to block devices. It also permits copying from one block device to another.
 
 ~~~bash
 dd if=source of=target # clones from source to target
@@ -195,26 +196,27 @@ dd if=source of=target # clones from source to target
 
 ## sync
 
-Sync writes any data buffered in memory to the disk. Useful if there is an unexpected halt of the system or before removing an external data stroage medium.
+Sync writes any data buffered in memory to the disk. Useful if there is an unexpected halt of the system or before removing an external data storage medium (though in those cases, when available, the `eject` command should be used).
 
 ## I/O Redirection
 
 ### Stream Numbers
-0: STDIN is the standard Input
+0 ("STDIN") is Standard Input
 
-1: STDOUT is the standard Output
+1 ("STDOUT") is Standard Output
 
-2: STDERR is the standard Error
+2 ("STDERR") is Standard Error, used for the output of errors or status messages.
 ### Redirection
 ~~~bash
-command 2> error.log # Redirects Error Output to error.log
+command > output.log # Redirect STDOUT to output.log !! This overwrites the file!
+command >> output.log # Redirect STDOUT to output.log, appending to the file instead.
+command 2> error.log # Redirects STDERR to error.log !! This overwrites the file! Use two `>` to append.
 command &> file.log # Redirects Output and Error to file.log
 command > file.log 2>&1 # same as above
 command 2>&1 # Redirects STDERR to STDOUT
 command 2> errors.txt 1> output.txt # Redirects Error and Output to different files
-command < file.txt # Redirects the default input STDIN to command
-command << file.txt # Redirects the input from file to STDIN sequencially
-command1 | command2 # Redirects output of command1 to command2
+command < file.txt # Redirects STDIN so it reads from file.txt
+command1 | command2 # Redirects the STDOUT of command1 to the STDIN of command2
 ~~~
 ## Tee
 This command allows you to write command output to a file and also redirect it to the STDOUT. Normally it is being used in a pipe.
@@ -253,29 +255,46 @@ Tells you who is logged in.
 ~~~bash
 command ./{element1,element2,element3}
 ~~~
-## Less
+## less
 
-The less command shows the content of a file from the beginning.
+The less command allows you to scroll through a file (which may also be STDIN).
 
-## Echo
+## echo
 
-Echo allowes you to print Strings to the STDOUT. You can combine it with Pipes and pass it to other files.
+sh's `echo` builtin allows you to print strings to STDOUT.
+Note that it is not well specified for anything more complicated than dumping output, so use printf instead.
 
 ~~~bash
 echo "Hello World."
 ~~~
 
-## Wall
+### Escape Code Flag
 
-Wall (Write All) sends a message to all users.
+Bash permits the use of the `-e` flag for the interpretation of `\` escape codes.
+Examples:
+~~~bash
+\b # backspace
+\c # suppress newline
+\n # newline
+\r # carriage return
+\t # tab (horizontal)
+\v # tab (vertical)
+\\ # backslash
+~~~
+
+
+## wall
+
+`wall` (Write All) sends a message to all users.
 
 ~~~bash
 wall "Hello. System Shutdown in 30 seconds." ; shutdown -h -t 30
 ~~~
 
-## Talk
+## talk
 
-Talk let's you chat with logged in users. Install using apt.
+`talk` let's you chat with logged in users. Note that it dumps your messages directly into their terminal.
+Install it with apt. Use `mesg n` to forbid messages and `mesg y` to allow them.
 
 ~~~bash
 talk customuser
@@ -298,21 +317,26 @@ $0, $1, $2
 ## If-Statements
 ### if then
 ~~~bash
-if [ condition ]
+if command
 then
   statement
 fi
 ~~~
 ### if then else
 ~~~bash
-if [ condition ]
+if command
 then
   statement1
 else
   statement2
 fi
 ~~~
-## Operators
+## Using Operators
+Most of the time you'll want to use the command `test`, or more likely, its short form,
+`[`. If invoked with `[`, the last argument must be `]`.
+
+Bash includes the built-in `[[`, which acts similarly, but is sometimes easier to use.
+
 ### Integer Comparison
 ~~~bash
 -eq # equals
@@ -331,11 +355,10 @@ fi
 > # greater than
 -z # is null (length of zero)
 ~~~
-### Logical Operators
+### Command chaining
 ~~~bash
-! # NOT
-&& # AND
-|| # OR
+&& # Run the command on the right if the command on the left ran successfully
+|| # Run the command on the right if the command on the left ran unsuccessfully
 ~~~
 Examples:
 ~~~bash
@@ -345,20 +368,7 @@ Runs command2 only if command1 returns exit code 0.
 ~~~bash
 command1 || command2
 ~~~
-Run command1 successfully otherwise run command2.
-## Echo
-### Escape Code Flag
-This enables the interpretation of \ escape codes.
-Examples:
-~~~bash
-\b # backspace
-\c # suppress newline
-\n # newline
-\r # carriage return
-\t # tab (horizontal)
-\v # tab (vertical)
-\\ # backslash
-~~~
+Runs command2 only if command1 doesn't return exit code 0.
 ## Arrays
 ### Definition
 ~~~bash
@@ -388,14 +398,14 @@ unset array[1] # removes 'element2' from array
 ~~~
 ## While-Loops
 ~~~bash
-while [ condition ]
+while command
 do
   statement
 done
 ~~~
 ## Until-Loops
 ~~~bash
-until [ condition ]
+until command
 do
   statement
 done
@@ -408,7 +418,7 @@ do
   statement
 done
 
-# Outputs from command
+# Word-split `command`'s STDOUT and loop over the words
 for output in $(command)
 do
   statement
@@ -466,6 +476,14 @@ w = Write Permission
 
 x = Execution Permission
 
+s = Execution Permission and setUID/GID
+
+S = setUID/GID without execution permission
+
+t = Sticky bit with execution permission
+
+T = Sticky bit without execution permission
+
 \- = No Right
 ### Octal Numbers
 ~~~bash
@@ -491,7 +509,9 @@ setUID: Run executable with the rights of the owner, not the one who is executin
 
 setGID: Run executable with rights of the group, not the one of the executing group (Octal 2).
 
-stickyBit: Only owner of the file can remove or rename the file (Octal 1).
+stickyBit (Octal 1):
+	* On directories: For every file contained within: Only owner of the file can remove or rename the file.
+	* On files: On old systems, executable files with this bit were put into swap space. Now, it does nothing.
 
 ## chmod
 
@@ -506,7 +526,7 @@ chmod +x file.sh # make file.sh executable
 Change Owner sets the owner of a file or directory.
 
 ~~~bash
-chown -R user:user ./directory/ # sets user "user" and group "user" as the owner of the directory
+chown -R user:user ./directory/ # sets user "user" and group "user" as the owner of the directory as well as all files under it
 ~~~
 
 ## Find
@@ -522,11 +542,16 @@ find . -user alice
 ~~~
 ## Which, Whereis and Whatis
 ~~~bash
-which command # outputs the pathnames where binaries are stored
-whereis command # outputs the pathnames of files which whould be executed in current environment
-whatis command # outputs description of command from manpages
+which command # outputs the pathnames where the command binary is stored
+whereis command # outputs the pathnames of files under the path that contain `command`
+whatis command # outputs a short description of command from manpages
 ~~~
 ## Creating users
+### High Level
+
+`useradd alice`. You will be prompted for other data.
+
+### Low level
 ~~~bash
 useradd alice -m -s /bin/bash -g users
 
@@ -535,7 +560,13 @@ useradd alice -m -s /bin/bash -g users
 -g <group> # default user group
 -c "<comment>" # define comment
 ~~~
+
 ## Remove users
+### High Level
+
+`deluser --backup-to /backup --remove-home alice`
+* `--remove-home`: Delete home directory
+* `--backup-to`: Create backup archive in directory specified
 ~~~bash
 userdel -r alice
 
@@ -548,25 +579,28 @@ cat /etc/group # returns all groups on system
 groupadd mygroup # add a group named mygroup
 gpasswd -a username groupname # adds user username to group groupname
 gpasswd -d username groupname # deletes user username from group groupname
+adduser username groupname # adds user username to group groupname
+deluser username groupname # removes user username to group groupname
 ~~~
-## Bashrc
+## .bashrc
 .bashrc is being executed when a new shell or terminal session is opened. You can find it as a hidden file in every user directory.
-## Alias
-Alias defined shortcuts ('aliases') for commands.
+A default file is also found in /etc/bashrc
+## alias
+alias defined shortcuts ('aliases') for commands.
 ~~~bash
 alias shortname='command' # defines new alias
 alias shortname # shows existing alias
 unalias shortname # remove shortname alias
 unalias -a # remove all aliases
 ~~~
-## Watch
-Recalls a command in regular time intervals.
+## watch
+Calls a command at regular time intervals and display its output
 ~~~bash
 watch -n 1 command
 # executes command every second
 ~~~
-## Head and Tail
-Head returns first part of a file, while the tail command returns the last part
+## head and tail
+head prints first bytes, characters or lines of a file, while the tail command prints the last bytes, characters or lines
 ~~~bash
 head -n 10 file.txt # shows first 10 lines of file.txt
 tail -n 10 file.txt # shows last 10 lines of file.txt
@@ -574,6 +608,7 @@ tail -f file.txt # output appended data as the file grows
 ~~~
 ## wc
 wc (Word Count) prints newline, word, and byte counts for each file.
+You can select only one to be printed with `-l`, `-w` or `-c`
 ~~~bash
 wc file.txt
 1  6  42 file.txt
@@ -591,19 +626,25 @@ Unpacking Archives:
 tar -xvf archive.tar.gz
 ~~~
 ## fstab
-fstab contains information for automatically mounting partitions. Contents of this file are split into columns for each line:
+fstab contains information for automatically mounting partitions. Contents of this file are split into columns for each line.
+Each column must be seperated from the last by whitespace, but the amount of whitespace does not matter.
 ~~~bash
-<file system>   # /dev/sda
-<mount point>   # /mnt
-<type>          # ntfs
-<option>        # defaults
-<dump>          # 0
-<pass>          # 0
+<file system> <mount point> <filesystem type> <options> <dump> <pass>
+/dev/sda      /mnt          ntfs              defaults  0      0
 ~~~
+
+Some notes:
+
+`dump` refers to an old backup utility. 0 disables.
+`pass` configures fsck checking order on bootup. Lower numbers mean the file system is checked first. 0 disables.
+
+It is recommended to use UUIDs (with `UUID=<uuid>`) where possible, as the numbering of devices is not guranteed to be consistent.
+In addition, labels can be used (with `LABEL=<label>`) instead.
+
 ## Cronjobs
 ~~~bash
-crontab -e # run cron as current user
-sudo crontab -e # run cron as root
+crontab -e # edit the current user's crontab
+sudo crontab -e # edit the root user's crontab
 ~~~
 Then configure the cronjob in the text editor.
 ## tmux Terminal Multiplexer
@@ -639,13 +680,15 @@ ctrl+B resize-pane -D 2 # Resize Pane down by 2 lines
 Symbolic Links are Files that point to other files.
 
 ~~~bash
-ln -s target link_name
+ln -s link_target link_name
 ~~~
 
 ## Formatting block devices
 
 ~~~bash
-mkfs.ext4 /dev/sda1 # format /dev/sda1 with ext4
+mkfs -t ext4 /dev/sda1 # format /dev/sda1 with ext4
+# alternatively:
+# mkfs.ext4 /dev/sda1 # format /dev/sda1 with ext4
 ~~~
 
 ## Boot Process
@@ -653,7 +696,8 @@ mkfs.ext4 /dev/sda1 # format /dev/sda1 with ext4
 ### Simplified Boot Process 
 
 - BIOS runs the Bootloader
-- Bootloader loads Kernel into Memory and starts it
+- Bootloader loads Initramfs + Kernel into Memory and starts the kernel
+- Kernel starts **init** scripts of initramfs
 - Kernel initializes services and drivers
 - Kernel mounts / (root filesystem)
 - Kernel starts **init** Program (PID 1)
@@ -720,15 +764,16 @@ Init Implementations:
 
 ### Runlevels
 
-Runlevels control the execution of Processes and Daemons.
+Runlevels control the execution of processes and daemons in System V.
+Systemd provides a rough mapping between runlevels and the respective targets.
 
 ~~~bash
 0: Shutdown. Dismount Partitions. Close Network Connections.
-1: Single-User Runlevel. Only Hard Drives and Filesystems are active.
+1: Single-User emergency mode. Only the root user may log in.
 2: Single-User Mode. No Network. Only local Resources.
 3: Local Multi-User Mode. Network Init (Debian). Local Resources.
-4: Not defined.
-5: Graphical User Interface is starting.
+4: Multi-User Mode.
+5: Graphical User Interface is running.
 6: Reboot. Close Network Connections. Dismount Partitions.
 ~~~
 
@@ -757,15 +802,13 @@ A unit type is a systemd capability, like for example mounting Filesystems, Moni
 
 ## passwd
 
-Changes the password for the specified user.
-
-## whatis
-
-Informs you about what a specified command does.
+Changes the password for the specified user or the current user.
+Requires root if not changing the current user's password.
+If not root, requires the current user's password to confirm authenticity.
 
 ## sudo
 
-sudo allows you to run commands as root.
+sudo allows you to run commands as other users.
 
 ~~~bash
 sudo passwd -d root # disable root login
@@ -782,7 +825,11 @@ user ALL = NOPASSWD: /usr/bin/python # user may execute /usr/bin/python without 
 
 ## cmp
 
-Compares two files and outputs all differences.
+Compares two files byte by byte and outputs the position of the first difference.
+
+## diff
+
+Compares two files. If they are text files, print a human-readable difference, otherwise print if they differ.
 
 ## ftp
 
@@ -790,7 +837,7 @@ File Transfer Protocol Tool.
 
 ## curl
 
-Allows you to transfer files from or to a server. It supports a wide range of network protocols: HTTP, FTP, HTTPS, LDAP, TELNET and others.
+Allows you to download files from a server. It supports a wide range of network protocols: HTTP, FTP, HTTPS, LDAP, TELNET and others.
 
 Example usage:
 
@@ -821,17 +868,17 @@ unset TEST_VAR # Remove Shell Variable
 
 ## Killing Processes
 
-You can either kill a process by it's UID (Unique Identifier) or by it's name:
+You can either kill a process by its PID (Process IDentifier) or by its name:
 
 ~~~bash
-kill 1234 # kill Process with ID 1234
-kill -SIGTERM 3139 # kill Process 3139 with SIGNTERM
-killall python # kill python
+kill 1234 # kill process with ID 1234
+kill -SIGTERM 3139 # kill process 3139 with SIGTERM
+killall python # kills all `python` processes
 ~~~
 
 ## man
 
-Shows the manpages for a package installed on the system.
+Shows the manpages for a command, package, file, concept or system call, provided its documentation is installed on the system.
 
 ## Mounting devices
 
@@ -846,10 +893,18 @@ umount -a # dismount all
 
 ## ping
 
-Send ICMP Ping to a Machine by IP or Hostname.
+Send ICMP Ping Requests to a machine by IP or hostname.
 
 ## Poweroff and Reboot
 
+### systemd
+
+~~~bash
+systemctl poweroff # shut the machine down
+systemctl reboot # reboot the machine
+~~~
+
+### Legacy
 ~~~bash
 poweroff # poweroff the machine
 reboot # reboot the machine
@@ -865,7 +920,7 @@ ssh -N user@host[:port] # connect but do not open a shell
 
 ## uname
 
-Shows System Information like:
+Shows system information like
 
 - Kernel name
 - Hostname
@@ -873,15 +928,19 @@ Shows System Information like:
 - Platform
 - Kernel Version
 
+depending on the arguments provided.
+
 ## wget
 
-Downloads files from HTTP/HTTPS/FTP Servers.
+`wget` downloads files from HTTP/HTTPS/FTP Servers. Similar to `curl`, but always stores to a file, using the file name provided in the url.
 
 ~~~bash
 wget https://cdimage.parrotsec.org/parrot/iso/4.5.1/Parrot-security-4.5.1_amd64.iso # Download ISO
 ~~~
 
 ## whoami
+
+`whoami` prints information about the current user.
 
 ~~~bash
 whoami # returns the current user name
@@ -891,9 +950,8 @@ whoami # returns the current user name
 
 - / (root directory)
 - /bin (Essential user command binaries)
-  - Binary Executables
-  - Linux Commands
-  - ping, grep, ...
+  - "Basic" Regular Linux Commands
+  - bash, grep, ls, ... ...
 - /boot (Boot Loader)
   - initrd
   - grub config files
@@ -903,37 +961,53 @@ whoami # returns the current user name
   - ttyX
   - usbX
 - /etc (System Configuration Files)
-  - Configfiles
-  - startup and shutdown shell scripts
+  - configuration files
 - /home (User Home Directories)
-  - user files
-  - bashrc
-  - local configuration files
-- /lib (Shared Libraries)
+  - user folders
+    - .bashrc
+    - other user files
+- /lib, /lib32, /lib64 (Shared Libraries)
   - libraries for /bin
   - libraries for /sbin
   - Shared Object Files
-- /media (Removable Media)
+- /media (Automatic mounts)
+  - The mountpoints in this directory are managed by programs that require no or little user input (file browsers, etc.)
   - cdrom
   - floppy
   - HDDs
   - USB Sticks
 - /mnt (Mounted Filesystems)
-  - temporarily mounted devices
-  - manually mounted devices
+  - Mountpoints for manually mounted file systems should go here
 - /opt (Application Software Packages)
+- /proc (Process Information)
+  - Process ID folders
+    - Process information
+  - System Resources (like uptime)
 - /sbin (System Binaries)
-  - init, route, fsck
-  - iptables, reboot, fdisk, ifconfig, swapon
+  - These normally require root
+  - `init`, `route`, `fsck`, `iptables`, `reboot`, `fdisk`, `ifconfig`, `swapon`
 - /srv (Data for System Services)
 - /tmp (Temporary Files)
 - /usr (User Utilities and Applications)
-  - libraries
-  - documentation
-  - source-code
-- /proc (Process Information)
-  - System Processes
-  - System Resources (like uptime)
+  - bin/
+    - Non-essential programs
+  - games/
+    - Games and "entertainment" programs like espdiff or sl
+  - include/
+    - Header files
+  - lib/, lib32/, lib64/
+    - Libraries for programs in /usr/bin or /usr/local/bin
+  - local/
+    - Locally built applications
+    - The same directory structure as /usr, except without the local/ folder.
+  - sbin/
+    - Non-essential system programs.
+    - `chroot`, `grub-install`, `sendmail`, `visudo`
+  - share/
+    - Various files used by programs
+    - Man pages are under the man/ directory in this folder
+  - src/
+    - Source code
 
 ## Kernel Modules
 
