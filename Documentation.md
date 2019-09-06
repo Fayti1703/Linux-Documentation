@@ -2,27 +2,40 @@
 
 by firebird641
 
-## Nano
+## nano
 
-Nano is a simple Linux Console Text / Script Editor. Run it using the **nano** command.
-
-## Cat
-
-With cat you can show the content of files.
+`nano` is a simple console text editor.
 
 ~~~bash
-cat file.txt
+nano notes # edit the "notes" file in the current directory. Creates the file on save if it does not exist
 ~~~
 
-## Printf
+## cat
 
-printf prints out a formatted string in which you can put variables and escape sequences.
+`cat` (con**cat**enate) prints the contents of files. If multiple files are specified, they are printed one after the other without seperators.
 
+~~~bash
+cat notes
+~~~
+
+~~~bash
+cat data1 data2
+~~~
+
+## printf
+
+`printf` (**print f**ormat) prints a string according to a format string and input parameters. The format string may contain placeholders (`%<C>` where `<C>` is a character) and escape sequences (`\<C>`, where `<C>` is a character).
+For more information on the format string and escape sequences, see the documentation of the C printf function (`man 3 printf`).
 ~~~bash
 printf "Hi, I'm %s.\n" "$NAME"
 ~~~
 
-## List Files
+## ls
+
+`ls` (**l**i**s**t) prints the files in a directory. If no directory is given, it uses the current working directory.
+
+The `-l` switch shows a longer listing that includes things like permission bits, file owners and last modified dates.
+The `-a` switch shows all files in a directory, including hidden files
 
 ~~~bash
 ls # show files in current directory
@@ -30,7 +43,7 @@ ls -l # list files in current directory
 ls -la # list all files in current directory
 ~~~
 
-## Copy, Move, Rename and Delete
+## cp, mv, rm
 
 ~~~bash
 # Copy
@@ -45,11 +58,11 @@ rmdir # removes a directory (it must be empty)
 
 ## fsck
 
-This verifies a file system (like chkdsk). 
+`fsck` detects and fixes file system errors (like chkdsk). 
 
 ## pwd
 
-Print Working Directory prints the current directory path.
+`pwd` (Print Working Directory) prints the current directory path.
 
 ## Directory Structure Commands
 
@@ -76,7 +89,7 @@ chroot /home/user/directory command
 
 ## Fakeroot
 
-Fakeroot creates an environment that "simulates" root privileges on a command. It fools the process to think it is being run as root.
+Fakeroot creates an environment that "simulates" root privileges on a command. It fools the process into thinking it is being run as root.
 
 ## File Extensions
 
